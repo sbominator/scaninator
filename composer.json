@@ -1,0 +1,6 @@
+{
+    "require": {
+        "nikic/php-parser": "^5.4",
+        "google/apiclient": "^2.18"
+    }
+}
