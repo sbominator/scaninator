@@ -337,7 +337,7 @@ class Scanninator
             $this->registerAutoCleanup();
         }
 
-        $base_dir = dirname($this->filename);
+        $base_dir = is_dir($this->filename) ? $this->filename : dirname($this->filename);
         $requires = [
             'php' => [],
             'js' => [],
@@ -648,26 +648,48 @@ class Scanninator
                 continue;
             }
 
-            // Retrieve the file's JavaScript package name and version
-            $lines = file($file);
+            // Check if file is minified by looking for .min. in filename
+            $isLikelyMinified = strpos($filename, '.min.') !== false;
 
-            // Loop through the only the first 15 files
-            for ($i = 0; $i < 10; $i++) {
-                if (!isset($lines[$i])) {
-                    break;
-                }
-
-                $line = $lines[$i] ?? '';
+            if ($isLikelyMinified) {
+                // For minified files, check first 100 characters
+                $content = file_get_contents($file, false, null, 0, 100);
 
                 // Search for a URL
-                if (strpos($line, 'http://') !== false || strpos($line, 'https://') !== false) {
-                    $parts = explode('/', $line);
-                    $dependency['name'] = $parts[2] ?? 'Unknown';
+                if (strpos($content, 'http://') !== false || strpos($content, 'https://') !== false) {
+                    preg_match('/(https?:\/\/[^\/]+)/', $content, $urlMatches);
+                    if (!empty($urlMatches[1])) {
+                        $parts = explode('/', $urlMatches[1]);
+                        $dependency['name'] = $parts[2] ?? 'Unknown';
+                    }
                 }
 
                 // Search for a version like v1.0.0
-                if (preg_match('/v\d+\.\d+\.\d+/', $line, $matches)) {
+                if (preg_match('/v\d+\.\d+\.\d+/', $content, $matches)) {
                     $dependency['version'] = $matches[0];
+                }
+            } else {
+                // Retrieve the file's JavaScript package name and version
+                $lines = file($file);
+
+                // Loop through only the first 10 lines
+                for ($i = 0; $i < 10; $i++) {
+                    if (!isset($lines[$i])) {
+                        break;
+                    }
+
+                    $line = $lines[$i] ?? '';
+
+                    // Search for a URL
+                    if (strpos($line, 'http://') !== false || strpos($line, 'https://') !== false) {
+                        $parts = explode('/', $line);
+                        $dependency['name'] = $parts[2] ?? 'Unknown';
+                    }
+
+                    // Search for a version like v1.0.0
+                    if (preg_match('/v\d+\.\d+\.\d+/', $line, $matches)) {
+                        $dependency['version'] = $matches[0];
+                    }
                 }
             }
 
