@@ -1,17 +1,17 @@
 <?php
 
+namespace Scanninator;
+
 use PhpParser\ParserFactory;
 
-require 'vendor/autoload.php';
-
 /**
- * PHP Dependency Scanner
+ * Scanninator
  *
  * This class scans PHP files for dependencies (require/include statements)
  * and resolves their full paths. It can scan local files or download and scan
  * files from GitHub repositories.
  */
-class PHP_Dependency_Scanner {
+class Scanninator {
 
 	/**
 	 * PHP Parser instance
@@ -42,11 +42,33 @@ class PHP_Dependency_Scanner {
 	private $is_github_url = false;
 
 	/**
+	 * GitHub URL
+	 *
+	 * @var string
+	 */
+	private $github_url;
+
+	/**
+	 * List of dependencies
+	 *
+	 * @var array
+	 */
+	private $dependencies = array();
+
+	/**
+	 * Debug mode flag
+	 *
+	 * @var boolean
+	 */
+	private $debug_mode = false;
+
+	/**
 	 * Constructor
 	 *
 	 * @param string $input The PHP file to analyze or a GitHub URL.
 	 */
 	public function __construct( $input ) {
+		$this->debug_mode = ( php_sapi_name() === 'cli' );
 		$this->check_dependencies();
 
 		$this->parser = ( new ParserFactory() )->createForNewestSupportedVersion();
@@ -59,13 +81,24 @@ class PHP_Dependency_Scanner {
 		}
 	}
 
+	/**
+	 * Output debug message when in CLI mode
+	 *
+	 * @param string $message The message to output.
+	 * @return void
+	 */
+	private function debug( $message ) {
+		if ( $this->debug_mode ) {
+			echo $message . PHP_EOL;
+		}
+	}
+
 	private function check_dependencies() {
 		$required_extensions = array( 'tokenizer' );
 
 		foreach ( $required_extensions as $ext ) {
 			if ( ! extension_loaded( $ext ) ) {
-				echo "The {$ext} extension is required for this script to run.\n";
-				exit( 1 );
+				throw new \Exception( "The '{$ext}' extension is required for this script to run." );
 			}
 		}
 
@@ -73,8 +106,7 @@ class PHP_Dependency_Scanner {
 
 		foreach ( $commands as $command ) {
 			if ( ! shell_exec( 'command -v ' . $command ) ) {
-				echo "The {$command} command is required for this script to run.\n";
-				exit( 1 );
+				throw new \Exception( "The '{$command}' command is required for this script to run." );
 			}
 		}
 	}
@@ -127,14 +159,12 @@ class PHP_Dependency_Scanner {
 			$branch    = $path_parts[3];
 			$file_path = $repo_dir . '/' . implode( '/', array_slice( $path_parts, 4 ) );
 		} else {
-			echo "Invalid GitHub URL format. Expected: https://github.com/owner/repo/blob/branch/path/to/file.php\n";
-			exit( 1 );
+			throw new \Exception( 'Invalid GitHub URL format.' );
 		}
 
 		// Check if file exists
 		if ( ! file_exists( $file_path ) ) {
-			echo "File not found in repository: {$file_path}\n";
-			exit( 1 );
+			throw new \Exception( 'File not found in repository.' );
 		}
 
 		return $file_path;
@@ -198,19 +228,19 @@ class PHP_Dependency_Scanner {
 
 		foreach ( $stmts as $stmt ) {
 			// Handle namespaced code
-			if ( $stmt instanceof PhpParser\Node\Stmt\Namespace_ && ! empty( $stmt->stmts ) ) {
+			if ( $stmt instanceof \PhpParser\Node\Stmt\Namespace_ && ! empty( $stmt->stmts ) ) {
 				// Recursively scan statements within the namespace
 				$namespace_requires = $this->get_requires( $stmt->stmts, $main_file );
-				$requires = array_merge( $requires, $namespace_requires );
+				$requires           = array_merge( $requires, $namespace_requires );
 				continue;
 			}
 
 			$expr = null;
 
-			if ( $stmt instanceof PhpParser\Node\Expr\Include_ ) {
+			if ( $stmt instanceof \PhpParser\Node\Expr\Include_ ) {
 				$expr = $stmt->expr;
-			} elseif ( $stmt instanceof PhpParser\Node\Stmt\Expression ) {
-				if ( $stmt->expr instanceof PhpParser\Node\Expr\Include_ ) {
+			} elseif ( $stmt instanceof \PhpParser\Node\Stmt\Expression ) {
+				if ( $stmt->expr instanceof \PhpParser\Node\Expr\Include_ ) {
 					$expr = $stmt->expr->expr;
 				}
 			}
@@ -219,19 +249,19 @@ class PHP_Dependency_Scanner {
 				$required_file = '';
 
 				// Handle concatenation with __DIR__ and other constants.
-				if ( $expr instanceof PhpParser\Node\Expr\BinaryOp\Concat ) {
+				if ( $expr instanceof \PhpParser\Node\Expr\BinaryOp\Concat ) {
 					$left_part  = $expr->left;
 					$right_part = $expr->right;
 
 					// Handle __DIR__ . '/something/file.php'.
-					if ( $left_part instanceof PhpParser\Node\Scalar\MagicConst\Dir ) {
-						if ( $right_part instanceof PhpParser\Node\Scalar\String_ ) {
+					if ( $left_part instanceof \PhpParser\Node\Scalar\MagicConst\Dir ) {
+						if ( $right_part instanceof \PhpParser\Node\Scalar\String_ ) {
 							// Use dirname() directly instead of concatenating paths that may already contain the repo path.
 							$required_file = dirname( $main_file ) . $right_part->value;
 						}
 					} else { // Handle other cases.
 						// Try to extract a path if possible
-						if ( $right_part instanceof PhpParser\Node\Scalar\String_ ) {
+						if ( $right_part instanceof \PhpParser\Node\Scalar\String_ ) {
 							$right_value = $right_part->value;
 
 							if ( isset( $expr->left->value ) ) {
@@ -241,7 +271,7 @@ class PHP_Dependency_Scanner {
 							}
 						}
 					}
-				} elseif ( $expr instanceof PhpParser\Node\Scalar\String_ ) {
+				} elseif ( $expr instanceof \PhpParser\Node\Scalar\String_ ) {
 					$required_file = $expr->value;
 				} else {
 					$required_file = $expr->getAttribute( 'rawValue', '' );
@@ -255,7 +285,7 @@ class PHP_Dependency_Scanner {
 					continue;
 				}
 
-				echo 'Found require: ' . $required_file . PHP_EOL;
+				$this->debug( 'Found require: ' . $required_file );
 
 				// Determine the full path.
 				$full_path = '';
@@ -294,18 +324,20 @@ class PHP_Dependency_Scanner {
 			$processed_files[] = $required_file;
 
 			if ( ! file_exists( $required_file ) || is_dir( $required_file ) ) {
-				echo 'File does not exist: ' . $required_file . PHP_EOL;
+				$this->debug( 'File does not exist: ' . $required_file );
 				continue;
 			}
 
 			$required_stmts = $this->parser->parse( file_get_contents( $required_file ) );
 
-			echo 'Scanning: ' . $required_file . PHP_EOL;
+			$this->debug( 'Scanning: ' . $required_file );
 
 			$sub_requires = $this->get_requires( $required_stmts, $required_file );
 			$requires     = array_merge( $requires, $sub_requires );
 
-			print_r( $sub_requires );
+			if ( $this->debug_mode ) {
+				print_r( $sub_requires );
+			}
 		}
 
 		return $requires;
@@ -334,25 +366,13 @@ class PHP_Dependency_Scanner {
 	 *
 	 * @return array List of dependency paths
 	 */
-	public function get_dependency_paths() {
+	public function get_dependencies() {
 		$requires = $this->scan();
-		return array_column( $requires, 'full_path' );
-	}
-}
 
-// Execute the script if run from the command line.
-if ( php_sapi_name() === 'cli' ) {
-	if ( isset( $argv[1] ) ) {
-		$scanner      = new PHP_Dependency_Scanner( $argv[1] );
-		$dependencies = $scanner->scan();
+		foreach ( $requires as $require ) {
+			$this->dependencies[] = $require['full_path'];
+		}
 
-		echo 'Requires: ' . PHP_EOL;
-		print_r( array_column( $dependencies, 'full_path' ) );
-
-		// Cleanup temp files if needed.
-		// $scanner->cleanup();
-	} else {
-		echo 'Usage: php sca.php <filename or GitHub URL>' . PHP_EOL;
-		echo 'Example GitHub URL: https://github.com/owner/repo/blob/main/path/to/file.php' . PHP_EOL;
+		return $this->dependencies;
 	}
 }

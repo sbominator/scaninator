@@ -1,4 +1,9 @@
 {
+    "autoload": {
+        "psr-4": {
+            "Scanninator\\": "src/"
+        }
+    },
     "require": {
         "nikic/php-parser": "^5.4",
         "google/apiclient": "^2.18"
