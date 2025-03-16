@@ -10,6 +10,7 @@ if ( 'cli' !== php_sapi_name() ) {
 
 if ( ! isset( $argv[1] ) ) {
 	echo 'Usage: php sca.php <filename or GitHub URL>' . PHP_EOL;
+	echo 'Example local file: php sca.php path/to/file.php' . PHP_EOL;
 	echo 'Example GitHub URL: https://github.com/owner/repo/blob/main/path/to/file.php' . PHP_EOL;
 	exit( 1 );
 }
