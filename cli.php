@@ -1,6 +1,6 @@
 <?php
 
-namespace Scanninator;
+namespace Sbominator\Scanninator;
 
 require 'vendor/autoload.php';
 
