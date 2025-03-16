@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.2](https://github.com/sbominator/scaninator/compare/v0.0.1...v0.0.2) (2025-03-16)
+
+
+### Bug Fixes
+
+* add licensing info ([78809c5](https://github.com/sbominator/scaninator/commit/78809c532153fbe420c8d417f9e2a61c98e06298))
+
 ## 0.0.1 (2025-03-16)
 
 
