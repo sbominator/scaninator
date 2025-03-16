@@ -49,6 +49,13 @@ class Scanninator {
 	private $github_url;
 
 	/**
+	 * Software Bill of Materials (SBOM) data
+	 *
+	 * @var array
+	 */
+	private $sbom = null;
+
+	/**
 	 * List of dependencies
 	 *
 	 * @var array
@@ -82,8 +89,7 @@ class Scanninator {
 
 		if ( $this->is_github_url( $input ) ) {
 			$this->is_github_url = true;
-			$this->filename      = $this->setup_github_repo( $input );
-			$this->register_auto_cleanup();
+			$this->github_url    = $input;
 		} else {
 			$this->filename = $input;
 		}
@@ -136,6 +142,44 @@ class Scanninator {
 				throw new \Exception( "The '{$command}' command is required for this script to run." );
 			}
 		}
+	}
+
+	public function get_sbom() {
+		if ( ! $this->is_github_url ) {
+			return;
+		}
+
+		$owner = '';
+		$repo  = '';
+
+		$url_parts  = parse_url( $this->github_url );
+		$path_parts = explode( '/', trim( $url_parts['path'], '/' ) );
+
+		if ( count( $path_parts ) > 1 ) {
+			$owner = $path_parts[0];
+			$repo  = $path_parts[1];
+		}
+
+		if ( empty( $owner ) || empty( $repo ) ) {
+			throw new \Exception( 'Invalid GitHub URL format.' );
+		}
+
+		$sbom_url = 'https://api.github.com/repos/' . $owner . '/' . $repo . '/dependency-graph/sbom';
+
+		$ch = curl_init();
+		curl_setopt( $ch, CURLOPT_URL, $sbom_url );
+		curl_setopt( $ch, CURLOPT_RETURNTRANSFER, 1 );
+		curl_setopt( $ch, CURLOPT_USERAGENT, 'Scanninator' );
+		$output = curl_exec( $ch );
+		curl_close( $ch );
+
+		$sbom = json_decode( $output, true );
+
+		if ( is_array( $sbom ) ) {
+			$this->sbom = $sbom;
+		}
+
+		return $this->sbom;
 	}
 
 	/**
@@ -239,6 +283,12 @@ class Scanninator {
 	 * @return array The list of dependencies
 	 */
 	public function scan() {
+		if ( $this->is_github_url ) {
+			$this->filename = $this->setup_github_repo( $this->github_url );
+			$this->get_sbom();
+			$this->register_auto_cleanup();
+		}
+
 		$stmts = $this->parser->parse( file_get_contents( $this->filename ) );
 		return $this->get_requires( $stmts, $this->filename );
 	}
@@ -380,9 +430,9 @@ class Scanninator {
 	public function get_expression_requires( $expr ) {
 		$requires = array();
 
-		if ( $expr instanceof PhpParser\Node\Expr\Include_ ) {
+		if ( $expr instanceof \PhpParser\Node\Expr\Include_ ) {
 			$requires[] = $expr->expr;
-		} elseif ( $expr->expr instanceof PhpParser\Node\Expr\Include_ ) {
+		} elseif ( $expr->expr instanceof \PhpParser\Node\Expr\Include_ ) {
 			$requires[] = $expr->expr;
 		}
 

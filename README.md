@@ -58,12 +58,29 @@ $dependencies = $scanner->get_dependencies();
 print_r($dependencies);
 ```
 
+### Retrieving SBOM Data
+
+For GitHub repositories, you can retrieve the Software Bill of Materials (SBOM) without performing a full scan:
+
+```php
+<?php
+require 'vendor/autoload.php';
+
+$scanner = new \Scanninator\Scanninator('https://github.com/owner/repo/blob/main/file.php');
+$sbom = $scanner->get_sbom();
+
+print_r($sbom);
+```
+
+This will fetch the dependency graph SBOM directly from GitHub's API without cloning or scanning the repository.
+
 ## Features
 
 - Scans PHP files for `require`, `require_once`, `include`, and `include_once` statements
 - Resolves paths of dependencies (handles relative paths, `__DIR__`, etc.)
 - Recursively analyzes dependencies to build a complete dependency tree
 - Support for scanning files directly from GitHub repositories
+- Retrieve SBOM data directly from GitHub repositories
 
 ## Contributing
 

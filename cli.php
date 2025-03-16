@@ -26,5 +26,3 @@ if ( empty( $dependencies ) ) {
 		echo $dependency . PHP_EOL;
 	}
 }
-
-$scanner->cleanup();
