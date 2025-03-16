@@ -66,7 +66,7 @@ For GitHub repositories, you can retrieve the Software Bill of Materials (SBOM) 
 <?php
 require 'vendor/autoload.php';
 
-$scanner = new \Scanninator\Scanninator('https://github.com/owner/repo/blob/main/file.php');
+$scanner = new \Scanninator\Scanninator('https://github.com/owner/repo');
 $sbom = $scanner->get_sbom();
 
 print_r($sbom);
