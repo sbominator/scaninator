@@ -63,6 +63,13 @@ class Scanninator {
 	private $debug_mode = false;
 
 	/**
+	 * Flag to indicate if auto-cleanup is registered
+	 *
+	 * @var boolean
+	 */
+	private static $auto_cleanup_registered = false;
+
+	/**
 	 * Constructor
 	 *
 	 * @param string $input The PHP file to analyze or a GitHub URL.
@@ -76,8 +83,28 @@ class Scanninator {
 		if ( $this->is_github_url( $input ) ) {
 			$this->is_github_url = true;
 			$this->filename      = $this->setup_github_repo( $input );
+			$this->register_auto_cleanup();
 		} else {
 			$this->filename = $input;
+		}
+	}
+
+	/**
+	 * Register cleanup function to run on shutdown
+	 */
+	private function register_auto_cleanup() {
+		if ( ! self::$auto_cleanup_registered ) {
+			// Store instance in a static variable to access it in the shutdown function.
+			static $instance = null;
+			$instance        = $this;
+
+			register_shutdown_function(
+				function () use ( $instance ) {
+					$instance->cleanup();
+				}
+			);
+
+			self::$auto_cleanup_registered = true;
 		}
 	}
 
@@ -175,6 +202,7 @@ class Scanninator {
 	 */
 	public function cleanup() {
 		if ( $this->is_github_url && $this->tmp_dir && file_exists( $this->tmp_dir ) ) {
+			$this->debug( 'Cleaning up temporary files in: ' . $this->tmp_dir );
 			$this->delete_directory( $this->tmp_dir );
 		}
 	}
