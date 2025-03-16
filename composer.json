@@ -1,4 +1,5 @@
 {
+    "name": "sbominator/scanninator",
     "autoload": {
         "psr-4": {
             "Scanninator\\": "src/"
