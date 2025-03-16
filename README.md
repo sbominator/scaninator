@@ -12,12 +12,14 @@ A PHP dependency scanner that analyzes PHP files to extract and resolve all incl
 ## Installation
 
 1. Clone the repository:
+
    ```bash
    git clone https://github.com/sbominator/scanninator.git
    cd scanninator
    ```
 
 2. Install dependencies with Composer:
+
    ```bash
    composer install
    ```
@@ -32,14 +34,16 @@ The simplest way to use Scanninator is through the command line:
 php cli.php <filename or GitHub URL>
 ```
 
-#### Examples:
+#### Examples
 
 Scan a local file:
+
 ```bash
 php cli.php path/to/file.php
 ```
 
 Scan a file from a GitHub repository:
+
 ```bash
 php cli.php https://github.com/owner/repo/blob/main/path/to/file.php
 ```
@@ -84,7 +88,7 @@ This will fetch the dependency graph SBOM directly from GitHub's API without clo
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+please see [CONTRIBUTING.md](CONTRIBUTING.md) for more information.
 
 ## License
 
