@@ -7,7 +7,7 @@ use PhpParser\ParserFactory;
 /**
  * Scanninator
  *
- * This class scans PHP files for dependencies (require/include statements)
+ * This class scans PHP files for files (uses of require/include statements)
  * and resolves their full paths. It can scan local files or download and scan
  * files from GitHub repositories.
  */
@@ -56,6 +56,13 @@ class Scanninator
     private $sbom = null;
 
     /**
+     * List of files
+     *
+     * @var array
+     */
+    private $files = [];
+
+    /**
      * List of dependencies
      *
      * @var array
@@ -91,7 +98,7 @@ class Scanninator
     public function __construct($input)
     {
         $this->debugMode = (php_sapi_name() === 'cli');
-        $this->checkDependencies();
+        $this->checkFiles();
 
         $this->parser = (new ParserFactory())->createForNewestSupportedVersion();
 
@@ -134,17 +141,17 @@ class Scanninator
     private function debug($message)
     {
         if ($this->debugMode) {
-            echo $message . PHP_EOL;
+            // echo $message . PHP_EOL;
         }
     }
 
     /**
-     * Check if required dependencies are installed
+     * Check if required files are installed
      *
      * @return void
      * @throws \Exception When a dependency is missing.
      */
-    private function checkDependencies()
+    private function checkFiles()
     {
         $requiredExtensions = ['tokenizer'];
 
@@ -311,11 +318,11 @@ class Scanninator
     }
 
     /**
-     * Run the dependency scan
+     * Run the dependency scan and return the list of files
      *
-     * @return array The list of dependencies
+     * @return array The list of files
      */
-    public function scan()
+    public function scanForFiles()
     {
         if ($this->isGithubUrl) {
             $this->filename = $this->setupGithubRepo($this->githubUrl);
@@ -369,7 +376,10 @@ class Scanninator
                     // Handle __DIR__ . '/something/file.php'.
                     if ($leftPart instanceof \PhpParser\Node\Scalar\MagicConst\Dir) {
                         if ($rightPart instanceof \PhpParser\Node\Scalar\String_) {
-                            // Use dirname() directly instead of concatenating paths that may already contain the repo path.
+                            /**
+                             * Use dirname() directly instead of concatenating paths that may
+                             * already contain the repo path.
+                             */
                             $requiredFile = dirname($mainFile) . $rightPart->value;
                         }
                     } else { // Handle other cases.
@@ -480,12 +490,75 @@ class Scanninator
      *
      * @return array List of dependency paths
      */
-    public function getDependencies()
+    public function getFiles()
     {
-        $requires = $this->scan();
+        $requires = $this->scanForFiles();
 
         foreach ($requires as $require) {
-            $this->dependencies[] = $require['full_path'];
+            $this->files[] = $require['full_path'];
+        }
+
+        return $this->files;
+    }
+
+    public function getDependecies()
+    {
+        $this->getFiles();
+
+        foreach ($this->files as $file) {
+            $dependencies = $this->getPackages($file);
+
+            if (!empty($dependencies['composer'])) {
+                $this->dependencies = array_merge($this->dependencies, $dependencies['composer']);
+            } else {
+                $dependencies = [];
+
+                // Retrieve the file's PHP namespace
+                $stmts = $this->parser->parse(file_get_contents($file));
+                $namespace = '';
+
+                foreach ($stmts as $stmt) {
+                    if ($stmt instanceof \PhpParser\Node\Stmt\Namespace_) {
+                        $namespace = $stmt->name->toString();
+                        break;
+                    }
+                }
+
+                // Find any comment with the @package and @version tags
+                $lines = file($file);
+                $package = '';
+                $version = '';
+
+                echo $file . PHP_EOL;
+
+
+                foreach ($lines as $line) {
+                    if (strpos($line, '@package') !== false) {
+                        $package = trim(str_replace('@package', '', $line));
+                        $package = str_replace(['*', '/', ' '], '', $package);
+                    }
+
+                    if (strpos($line, '@version') !== false) {
+                        $version = trim(str_replace('@version', '', $line));
+                        $version = str_replace(['*', '/', ' '], '', $version);
+                    }
+                }
+
+                if (empty($package) && !empty($namespace)) {
+                    $parts = explode('/', $namespace);
+                    $package = $parts[0] ?? '';
+                }
+
+                if (!empty($package)) {
+                    $dependencies[] = [
+                        'name' => $package,
+                        'version' => $version,
+                        'namespace' => $namespace,
+                    ];
+                }
+
+                $this->dependencies = array_merge($this->dependencies, $dependencies);
+            }
         }
 
         return $this->dependencies;
@@ -496,27 +569,30 @@ class Scanninator
      *
      * @return array List of packages
      */
-    public function getPackages()
+    public function getPackages(string $filePath)
     {
-        foreach ($this->dependencies as $dependency) {
-            $filesToCheck = ['composer.json', 'package.json'];
+        $filesToCheck = ['composer.lock', 'package.json'];
+        $packages = [
+            'composer' => [],
+            'npm' => [],
+        ];
 
-            foreach ($filesToCheck as $file) {
-                $packagesFile = dirname($dependency) . '/' . $file;
+        foreach ($filesToCheck as $file) {
+            $packagesFile = dirname($filePath) . '/' . $file;
 
-                if (file_exists($packagesFile)) {
-                    $composerData = json_decode(file_get_contents($packagesFile), true);
+            if (file_exists($packagesFile)) {
+                $data = json_decode(file_get_contents($packagesFile), true);
 
-                    if ($composerData) {
-                        $this->packages[] = [
-                            'file' => $packagesFile,
-                            'data' => $composerData,
-                        ];
+                if ($data) {
+                    if ($file === 'composer.lock') {
+                        $packages['composer'] = $data;
+                    } elseif ($file === 'package.json') {
+                        $packages['npm'] = $data;
                     }
                 }
             }
         }
-        
-        return $this->packages;
+
+        return $packages;
     }
 }
