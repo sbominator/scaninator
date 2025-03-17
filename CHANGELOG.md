@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.0](https://github.com/sbominator/scaninator/compare/v0.0.2...v0.1.0) (2025-03-17)
+
+
+### Features
+
+* Enhance Scanninator to process PHP and JS files ([4bdbbc2](https://github.com/sbominator/scaninator/commit/4bdbbc2df4fbe5c560005c3d19955a79d3f7a0be))
+
+
+### Miscellaneous Chores
+
+* Bump version to 0.0.3 in release-please manifest ([7107342](https://github.com/sbominator/scaninator/commit/7107342db68f8b4e49ecc99fd4c9f2624d214e7e))
+* Update .gitignore to include vendor and tests directories ([1ac24d0](https://github.com/sbominator/scaninator/commit/1ac24d0b70d02398c4df02abe8aad8b81974d18b))
+
 ## [0.0.2](https://github.com/sbominator/scaninator/compare/v0.0.1...v0.0.2) (2025-03-16)
 
 
