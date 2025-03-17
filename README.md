@@ -1,4 +1,4 @@
-# Scanninator
+# Scaninator
 
 A PHP dependency scanner that analyzes PHP files to extract and resolve all include/require statements. This tool can scan both local files and PHP files from GitHub repositories.
 
@@ -14,8 +14,8 @@ A PHP dependency scanner that analyzes PHP files to extract and resolve all incl
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/sbominator/scanninator.git
-   cd scanninator
+   git clone https://github.com/sbominator/scaninator.git
+   cd scaninator
    ```
 
 2. Install dependencies with Composer:
@@ -28,7 +28,7 @@ A PHP dependency scanner that analyzes PHP files to extract and resolve all incl
 
 ### Command Line Interface
 
-The simplest way to use Scanninator is through the command line:
+The simplest way to use Scaninator is through the command line:
 
 ```bash
 php cli.php <filename or GitHub URL>
@@ -50,13 +50,13 @@ php cli.php https://github.com/owner/repo/blob/main/path/to/file.php
 
 ### Programmatic Usage
 
-You can also use Scanninator in your own PHP scripts:
+You can also use Scaninator in your own PHP scripts:
 
 ```php
 <?php
 require 'vendor/autoload.php';
 
-$scanner = new \Scanninator\Scanninator('path/to/file.php');
+$scanner = new \Scaninator\Scaninator('path/to/file.php');
 $dependencies = $scanner->get_dependencies();
 
 print_r($dependencies);
@@ -70,7 +70,7 @@ For GitHub repositories, you can retrieve the Software Bill of Materials (SBOM) 
 <?php
 require 'vendor/autoload.php';
 
-$scanner = new \Scanninator\Scanninator('https://github.com/owner/repo');
+$scanner = new \Scaninator\Scaninator('https://github.com/owner/repo');
 $sbom = $scanner->get_sbom();
 
 print_r($sbom);
