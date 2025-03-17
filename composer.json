@@ -1,5 +1,5 @@
 {
-    "name": "sbominator/scanninator",
+    "name": "sbominator/scaninator",
     "license": "MIT",
     "homepage": "https://github.com/sbominator/package",
     "keywords": [
@@ -8,7 +8,7 @@
     ],
     "autoload": {
         "psr-4": {
-            "Scanninator\\": "src/"
+            "Scaninator\\": "src/"
         }
     },
     "require": {

@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<ruleset name="Sbominator Coding Standards">
+    <description>PSR-12 coding standards for Sbominator project</description>
+
+    <!-- Use colors in output -->
+    <arg name="colors"/>
+    
+    <!-- Show sniff codes in all reports -->
+    <arg value="s"/>
+    
+    <!-- Use PSR-12 as the primary standard -->
+    <rule ref="PSR12"/>
+    
+    <!-- Exclude some directories -->
+    <exclude-pattern>*/vendor/*</exclude-pattern>
+    <exclude-pattern>*/node_modules/*</exclude-pattern>
+    <exclude-pattern>*/tmp/*</exclude-pattern>
+    
+    <!-- Line length -->
+    <rule ref="Generic.Files.LineLength">
+        <properties>
+            <property name="lineLimit" value="120"/>
+            <property name="absoluteLineLimit" value="0"/>
+        </properties>
+    </rule>
+
+    <!-- Allow method chaining to be indented with multiple lines -->
+    <rule ref="PSR2.Methods.FunctionCallSignature.Indent">
+        <severity>0</severity>
+    </rule>
+
+    <!-- Custom rules -->
+    <rule ref="Squiz.Strings.DoubleQuoteUsage.NotRequired" />
+    <rule ref="Squiz.WhiteSpace.SuperfluousWhitespace">
+        <properties>
+            <property name="ignoreBlankLines" value="false"/>
+        </properties>
+    </rule>
+</ruleset>

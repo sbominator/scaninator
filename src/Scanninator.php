@@ -1,17 +1,17 @@
 <?php
 
-namespace Scanninator;
+namespace Scaninator;
 
 use PhpParser\ParserFactory;
 
 /**
- * Scanninator
+ * Scaninator
  *
  * This class scans PHP files for files (uses of require/include statements)
  * and resolves their full paths. It can scan local files or download and scan
  * files from GitHub repositories.
  */
-class Scanninator
+class Scaninator
 {
     /**
      * PHP Parser instance
@@ -209,7 +209,7 @@ class Scanninator
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $sbomUrl);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_USERAGENT, 'Scanninator');
+        curl_setopt($ch, CURLOPT_USERAGENT, 'Scaninator');
         $output = curl_exec($ch);
         curl_close($ch);
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace Scanninator;
+namespace Scaninator;
 
 require 'vendor/autoload.php';
 
@@ -15,7 +15,7 @@ if (! isset($argv[1])) {
     exit(1);
 }
 
-$scanner      = new Scanninator($argv[1]);
+$scanner      = new Scaninator($argv[1]);
 $dependencies = $scanner->getDependecies();
 
 if (empty($dependencies)) {
