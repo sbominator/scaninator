@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/sbominator/scaninator/compare/v0.1.1...v0.1.2) (2025-03-17)
+
+
+### Bug Fixes
+
+* handle non-existent or directory mainFile in getJsRequires method ([58c0588](https://github.com/sbominator/scaninator/commit/58c058834d903a046716181db2c7d6c4a3178837))
+
 ## [0.1.1](https://github.com/sbominator/scaninator/compare/v0.1.0...v0.1.1) (2025-03-17)
 
 
