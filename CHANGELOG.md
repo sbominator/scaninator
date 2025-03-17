@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/sbominator/scaninator/compare/v0.1.0...v0.1.1) (2025-03-17)
+
+
+### Bug Fixes
+
+* prefix namespace with `Sbominator` ([#4](https://github.com/sbominator/scaninator/issues/4)) ([e937dbc](https://github.com/sbominator/scaninator/commit/e937dbce65ee06008e865e3b2dbeb4dbcd34703e))
+
 ## [0.1.0](https://github.com/sbominator/scaninator/compare/v0.0.2...v0.1.0) (2025-03-17)
 
 
