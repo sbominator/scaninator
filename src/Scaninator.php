@@ -424,6 +424,10 @@ class Scaninator
 
     public function getJsRequires($mainFile)
     {
+        if (!file_exists($mainFile) || is_dir($mainFile)) {
+            return [];
+        }
+
         $content = file_get_contents($mainFile);
         $requires = [
             [
